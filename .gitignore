@@ -1,0 +1,6 @@
+*.zip
+_site/
+data/2026_absentee.zip
+work/*.pkl
+__pycache__/
+.DS_Store
