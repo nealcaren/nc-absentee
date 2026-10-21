@@ -210,7 +210,7 @@ nxt = list(range(LAST + 1, min(LAST + 4, 18)))
 if nxt:
     watch = (f'<b>What to watch.</b> Day {nxt[0]} ({date_of(nxt[0]).strftime("%b %-d")}) is next. '
              f'The persistent path expects {", ".join(f"{HI[k]:,}" for k in nxt)}; '
-             f'the fading path expects {", ".join(f"{LO[k]:,}" for k in nxt)}.')
+             f'the surge-stops path expects {", ".join(f"{LO[k]:,}" for k in nxt)}.')
 elif LAST < 17:
     watch = '<b>No data yet today.</b>'
 else:
@@ -274,7 +274,7 @@ footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-s
 <div class="cards">
 <div class="card"><div class="k">Banked so far</div><div class="v">{BANKED:,}</div><div class="n">in-person early votes</div></div>
 <div class="card"><div class="k">Pace vs 2022</div><div class="v">{S['total']:.2f}&times;</div><div class="n">same days, 2022</div></div>
-<div class="card"><div class="k">Projected total</div><div class="v">{TOT_LO/1e6:.2f}&ndash;{TOT_HI/1e6:.2f}M</div><div class="n">fading to persistent</div></div>
+<div class="card"><div class="k">Projected total</div><div class="v">{TOT_LO/1e6:.2f}&ndash;{TOT_HI/1e6:.2f}M</div><div class="n">surge stops / persists</div></div>
 <div class="card"><div class="k">Democratic share</div><div class="v">{bank_share:.1f}%</div><div class="n">of banked D+R</div></div>
 </div>
 
@@ -329,7 +329,7 @@ json.dump({
     'accuracy': {'n': len(errs), 'mae': round(mae) if mae is not None else None,
                  'mean_ratio': round(mean_ratio, 3) if mean_ratio else None},
     'daily': [{'day': k, 'date': str(date_of(k)),
-               'persistent': HI[k], 'fading': LO[k],
+               'persistent': HI[k], 'surge_stops': LO[k],
                'actual': obs[k]['total'] if k <= LAST else None,
                'dem_actual': obs[k]['DEM'] if k <= LAST else None,
                'rep_actual': obs[k]['REP'] if k <= LAST else None}
