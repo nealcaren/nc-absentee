@@ -2,9 +2,10 @@ name: Update tracker
 
 on:
   schedule:
-    # 10:30 and 16:30 Eastern. NCSBE posts the daily file mid-morning.
-    - cron: '30 14 * * *'
-    - cron: '30 20 * * *'
+    # Every two hours. NCSBE posts the daily file mid-morning, but the exact
+    # time moves and GitHub delays scheduled runs, so poll rather than guess.
+    # Minute 17 instead of 0 avoids the top-of-hour scheduling queue.
+    - cron: '17 */2 * * *'
   workflow_dispatch:
 
 permissions:

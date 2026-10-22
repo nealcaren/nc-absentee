@@ -15,12 +15,41 @@ ELECTION = datetime.date(2026, 11, 3)
 ACC = {'ACCEPTED', 'ACCEPTED - CURED', 'ACCEPTED - EXCEPTION'}
 PARTS = ['DEM', 'REP', 'UNA', 'LIB']
 CACHE = 'data/2026_absentee.zip'
+LAST_MODIFIED = None
+
+
+def remote_modified():
+    """Last-Modified of the archive, or None if the HEAD request fails."""
+    try:
+        req = urllib.request.Request(URL, method='HEAD', headers={'User-Agent': 'nc-absentee-tracker/1.0'})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return r.headers.get('Last-Modified')
+    except Exception as e:
+        print(f"HEAD check failed ({e}); will download anyway")
+        return None
+
+
+def previous_stamp():
+    try:
+        return json.load(open('data/observed.json')).get('source_last_modified')
+    except Exception:
+        return None
 
 
 def fetch():
     if '--zip' in sys.argv:
         return sys.argv[sys.argv.index('--zip') + 1]
     os.makedirs('data', exist_ok=True)
+
+    # Polling every two hours: skip the 48MB download when the archive has not
+    # been re-posted since the last run.
+    global LAST_MODIFIED
+    lm = remote_modified()
+    LAST_MODIFIED = lm
+    if lm and lm == previous_stamp() and '--force' not in sys.argv:
+        print(f"no new file: S3 Last-Modified is still {lm}")
+        sys.exit(0)
+
     req = urllib.request.Request(URL, headers={'User-Agent': 'nc-absentee-tracker/1.0'})
     with urllib.request.urlopen(req, timeout=300) as r, open(CACHE, 'wb') as f:
         while True:
@@ -28,7 +57,7 @@ def fetch():
             if not chunk:
                 break
             f.write(chunk)
-    print(f"downloaded {os.path.getsize(CACHE):,} bytes")
+    print(f"downloaded {os.path.getsize(CACHE):,} bytes (Last-Modified {lm})")
     return CACHE
 
 
@@ -56,6 +85,7 @@ def main():
 
     out = {
         'election': str(ELECTION),
+        'source_last_modified': LAST_MODIFIED,
         'through': str(max(ELECTION - datetime.timedelta(days=20 - k) for k in days)),
         'last_day': max(days),
         'days': {str(k): {p: int(days[k][p]) for p in PARTS + ['OTH', 'total']} for k in sorted(days)},

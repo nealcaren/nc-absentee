@@ -55,8 +55,10 @@ The repository must be public for GitHub Pages on a free account.
 2. Settings → Pages → Source: **GitHub Actions**.
 3. Run the *Update tracker* workflow once manually (Actions → Run workflow).
 
-After that it runs at 10:30 and 16:30 Eastern daily, commits the day's data,
-and republishes the site.
+After that it polls every two hours (minute 17 of even UTC hours), commits the
+day's data when it changes, and republishes the site. Repeated runs are cheap:
+the workflow checks the archive's Last-Modified header and skips the 48MB
+download when nothing has been re-posted.
 
 ## Caveats
 
