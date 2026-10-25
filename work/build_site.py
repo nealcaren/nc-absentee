@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Build the static tracker site.
 
-The forecast is re-estimated on every run from all days observed so far. To keep
-the scorecard honest, every run also appends the forecast it just issued to
-data/vintages.json, keyed by the last day of data it had seen. A day's accuracy
-is then measured against the vintage issued immediately before it, never against
-a model that has since seen the answer.
+The forecast is re-estimated on every run from all days observed so far (see
+work/central.py). To keep the scorecard honest, every run also appends the
+forecast it just issued to data/vintages.json, keyed by the last day of data it
+had seen. A day's accuracy is then measured against the vintage issued
+immediately before it, never against a model that has since seen the answer.
 
 Outputs _site/index.html, _site/report.html, _site/data.json.
 Standard library only.
 """
 import json, os, datetime
+from central import central, band, GROUPS
 
 BASE = json.load(open('data/baseline.json'))
 OBS = json.load(open('data/observed.json'))
@@ -18,9 +19,8 @@ VIN_PATH = 'data/vintages.json'
 VIN = json.load(open(VIN_PATH)) if os.path.exists(VIN_PATH) else {}
 
 ELECTION = datetime.date.fromisoformat(OBS['election'])
-PARTS = ['DEM', 'REP', 'UNA']
-LABEL = {'DEM': 'Democrat', 'REP': 'Republican', 'UNA': 'Unaffiliated'}
-ALL = PARTS + ['OTH']
+PARTS = ['DEM', 'REP', 'UNA', 'OTH']
+LABEL = {'DEM': 'Democrat', 'REP': 'Republican', 'UNA': 'Unaffiliated', 'OTH': 'Libertarian &amp; other'}
 LAST = int(OBS['last_day'])
 THROUGH = datetime.date.fromisoformat(OBS['through'])
 DAYS_TO_GO = 17 - LAST
@@ -28,8 +28,6 @@ DAYS_TO_GO = 17 - LAST
 b22 = {int(k): v for k, v in BASE['days']['2022'].items()}
 b24 = {int(k): v for k, v in BASE['days']['2024'].items()}
 obs = {int(k): v for k, v in OBS['days'].items()}
-T22 = sum(v['total'] for v in b22.values())
-T24 = sum(v['total'] for v in b24.values())
 BANKED = sum(obs[k]['total'] for k in range(1, LAST + 1))
 
 
@@ -37,119 +35,126 @@ def date_of(k):
     return ELECTION - datetime.timedelta(days=20 - k)
 
 
-def ratio(part, days):
-    """2026 / 2022 for a party over a set of days."""
-    num = sum(obs[k][part] for k in days)
-    den = sum(b22[k][part] for k in days)
-    return num / den if den else 0.0
+def grp(day, p):
+    return sum(day.get(q, 0) for q in GROUPS[p])
 
 
-# --- pace estimates -------------------------------------------------------
-S = {p: ratio(p, range(1, LAST + 1)) for p in ALL + ['total']}            # cumulative
-RECENT = {p: ratio(p, range(max(1, LAST - 2), LAST + 1)) for p in ALL + ['total']}  # trailing 3 days
+F22 = {p: sum(grp(b22[k], p) for k in b22) for p in PARTS}    # 2022 final, by party
+T22 = sum(F22.values())
+BANK = {p: sum(grp(obs[k], p) for k in range(1, LAST + 1)) for p in PARTS}
+
+# --- forecast (both baselines, all observed days) -------------------------
+C = central(obs, b22, b24, LAST)
+MID, MLO, MHI = C['total']
+PT, SIMS = C['party_point'], C['party_sims']
+NS = len(SIMS['DEM'])
+sim_tot = [sum(SIMS[p][i] for p in PARTS) for i in range(NS)]
 
 
-def s_low(part, k):
-    """Lower bound: the surge stops after the last observed day."""
-    return 1.0
+def pct_band(f, point):
+    """90% band, in percent, for a function of one draw's party totals."""
+    draws = [100 * f({p: SIMS[p][i] for p in PARTS}) for i in range(NS)]
+    return band(draws, 100 * f(point))
 
 
-def forecast(kind):
-    out = {}
-    for k in range(1, 18):
-        if k <= LAST:
-            out[k] = obs[k]['total']
-        elif kind == 'high':
-            out[k] = sum(round(b22[k][p] * S[p]) for p in ALL)
-        else:
-            out[k] = sum(round(b22[k][p] * s_low(p, k)) for p in ALL)
-    return out
-
-
-def forecast_party(part, kind):
-    out = {}
-    for k in range(1, 18):
-        if k <= LAST:
-            out[k] = obs[k][part]
-        elif kind == 'high':
-            out[k] = round(b22[k][part] * S[part])
-        else:
-            out[k] = round(b22[k][part] * s_low(part, k))
-    return out
-
-
-HI, LO = forecast('high'), forecast('low')
-TOT_HI, TOT_LO = sum(HI.values()), sum(LO.values())
+CHANGE = {p: pct_band(lambda d, p=p: d[p] / F22[p] - 1, PT) for p in PARTS}
+SHARE = {p: pct_band(lambda d, p=p: d[p] / sum(d.values()), PT) for p in PARTS}
+TOT_CHANGE = band([100 * (t / T22 - 1) for t in sim_tot], 100 * (MID / T22 - 1))
+DSHARE = pct_band(lambda d: d['DEM'] / (d['DEM'] + d['REP']), PT)
+DSHARE22 = 100 * F22['DEM'] / (F22['DEM'] + F22['REP'])
+DSHARE_BANK = 100 * BANK['DEM'] / (BANK['DEM'] + BANK['REP'])
 
 # --- record this run's forecast ------------------------------------------
 if LAST < 17:
     key = str(LAST)
-    if key not in VIN:                      # keep the first forecast issued on a given information set
-        VIN[key] = {
-            'issued': str(datetime.date.today()),
-            'last_day': LAST,
-            'through': str(THROUGH),
-            'high': {str(k): HI[k] for k in range(LAST + 1, 18)},
-            'low': {str(k): LO[k] for k in range(LAST + 1, 18)},
-            'total_high': TOT_HI, 'total_low': TOT_LO,
-            'scales': {p: round(S[p], 4) for p in PARTS},
-        }
+    v = VIN.setdefault(key, {'issued': str(datetime.date.today()), 'last_day': LAST, 'through': str(THROUGH)})
+    fresh = {'central': {str(k): list(C['day'][k]) for k in range(LAST + 1, 18)},
+             'total_central': list(C['total']),
+             'party_central': {p: list(C['party'][p]) for p in PARTS}}
+    missing = {f: val for f, val in fresh.items() if f not in v}
+    if missing:                             # keep the first forecast issued on a given information set
+        v.update(missing)
         json.dump(VIN, open(VIN_PATH, 'w'), indent=1, sort_keys=True)
 
 
-def vintage_pred(k):
-    """The forecast for day k issued just before day k was observed."""
-    v = VIN.get(str(k - 1))
-    if not v:
-        return None
-    return v['high'].get(str(k)), v['low'].get(str(k))
-
-
 # --- scorecard ------------------------------------------------------------
-rows, errs = [], []
+def vintage_central(k):
+    """Central forecast and interval for day k, issued just before day k was observed.
+    Days before the forecast was introduced are replayed from data through day k-1
+    and flagged, so they can be shown but never counted as issued."""
+    v = VIN.get(str(k - 1), {}).get('central', {}).get(str(k))
+    if v:
+        return v, False
+    if k - 1 >= 5:                          # need three weekdays to fit a trend
+        return list(central(obs, b22, b24, k - 1)['day'][k]), True
+    return None, False
+
+
+def rng(lo, hi):
+    return f'{lo/1000:,.0f}&ndash;{hi/1000:,.0f}k'
+
+
+rows, cerrs, rerrs = [], [], []
 for k in range(1, 18):
-    d, dow = date_of(k).strftime('%b %-d'), date_of(k).strftime('%a')
+    d = date_of(k).strftime('%a %b %-d')
     if k <= LAST:
         act = obs[k]['total']
-        vp = vintage_pred(k)
-        if vp and vp[0]:
-            ph, pl = vp
-            rh, rl = act / ph, act / pl
-            errs.append((k, act, ph, pl))
-            cls = lambda r: 'ok' if 0.9 <= r <= 1.1 else ('hi' if r > 1.1 else 'lo')
-            rows.append(f'<tr class="seen"><td>{k}</td><td>{d}</td><td>{dow}</td>'
-                        f'<td>{ph:,}</td><td>{pl:,}</td><td><b>{act:,}</b></td>'
-                        f'<td class="{cls(rh)}">{rh:.2f}</td><td class="{cls(rl)}">{rl:.2f}</td></tr>')
+        vc, replay = vintage_central(k)
+        if vc:
+            m, lo, hi = vc
+            (rerrs if replay else cerrs).append((k, act, m, lo <= act <= hi))
+            cls = 'ok' if lo <= act <= hi else ('hi' if act > hi else 'lo')
+            rows.append(f'<tr class="seen"><td>{k}</td><td>{d}</td><td>{m:,}</td><td class="rng">{rng(lo, hi)}</td>'
+                        f'<td><b>{act:,}</b></td><td class="{cls}">{act / m:.2f}</td></tr>')
+            if replay:
+                rows[-1] = rows[-1].replace(f'<td>{m:,}</td>', f'<td class="rng">{m:,}&#8224;</td>', 1)
         else:
-            rows.append(f'<tr class="seen"><td>{k}</td><td>{d}</td><td>{dow}</td>'
-                        f'<td>&middot;</td><td>&middot;</td><td><b>{act:,}</b></td><td></td><td></td></tr>')
+            rows.append(f'<tr class="seen"><td>{k}</td><td>{d}</td><td>&middot;</td><td></td>'
+                        f'<td><b>{act:,}</b></td><td></td></tr>')
     else:
-        rows.append(f'<tr class="future"><td>{k}</td><td>{d}</td><td>{dow}</td>'
-                    f'<td>{HI[k]:,}</td><td>{LO[k]:,}</td><td>&middot;</td><td></td><td></td></tr>')
+        m, lo, hi = C['day'][k]
+        rows.append(f'<tr class="future"><td>{k}</td><td>{d}</td><td>{m:,}</td><td class="rng">{rng(lo, hi)}</td>'
+                    f'<td>&middot;</td><td></td></tr>')
 scorecard = '\n'.join(rows)
 
-mae = sum(abs(a - p) for _, a, p, _ in errs) / len(errs) if errs else None
-bias = sum(a - p for _, a, p, _ in errs) / len(errs) if errs else None
-mean_ratio = sum(a / p for _, a, p, _ in errs) / len(errs) if errs else None
+c_mae = sum(abs(a - m) for _, a, m, _ in cerrs) / len(cerrs) if cerrs else None
+c_in = sum(inside for *_, inside in cerrs)
+r_in = sum(inside for *_, inside in rerrs)
 
 # --- party table ----------------------------------------------------------
+def signed(v):
+    return f'{v:+.0f}%'.replace('-', '&minus;')
+
+
 prow = []
 for p in PARTS:
-    bank = sum(obs[k][p] for k in range(1, LAST + 1))
-    a, b = sum(forecast_party(p, 'high').values()), sum(forecast_party(p, 'low').values())
-    prow.append(f'<tr><td><span class="dot {p.lower()}"></span>{LABEL[p]}</td><td>{bank:,}</td>'
-                f'<td class="{"hi" if S[p] > 1.15 else ""}">{S[p]:.2f}&times;</td>'
-                f'<td class="{"lo" if RECENT[p] < S[p] - 0.12 else ""}">{RECENT[p]:.2f}&times;</td>'
-                f'<td>{a:,}</td><td>{b:,}</td></tr>')
+    m, lo, hi = C['party'][p]
+    ch, sh = CHANGE[p], SHARE[p]
+    prow.append(f'<tr><td><span class="dot {p.lower()}"></span>{LABEL[p]}</td><td>{F22[p]:,}</td>'
+                f'<td><b>{m:,}</b><div class="rng">{rng(lo, hi)}</div></td>'
+                f'<td><b>{signed(ch[0])}</b><div class="rng">{signed(ch[1])} to {signed(ch[2])}</div></td>'
+                f'<td>{100 * F22[p] / T22:.1f}%</td>'
+                f'<td><b>{sh[0]:.1f}%</b><div class="rng">{sh[1]:.1f}&ndash;{sh[2]:.1f}%</div></td></tr>')
+prow.append(f'<tr class="tot"><td>Total</td><td>{T22:,}</td><td><b>{MID:,}</b><div class="rng">{rng(MLO, MHI)}</div></td>'
+            f'<td><b>{signed(TOT_CHANGE[0])}</b><div class="rng">{signed(TOT_CHANGE[1])} to {signed(TOT_CHANGE[2])}</div></td>'
+            f'<td>100%</td><td>100%</td></tr>')
 party_table = '\n'.join(prow)
 
-dem_bank = sum(obs[k]['DEM'] for k in range(1, LAST + 1))
-rep_bank = sum(obs[k]['REP'] for k in range(1, LAST + 1))
-bank_share = 100 * dem_bank / (dem_bank + rep_bank)
-A_D, A_R = sum(forecast_party('DEM', 'high').values()), sum(forecast_party('REP', 'high').values())
-B_D, B_R = sum(forecast_party('DEM', 'low').values()), sum(forecast_party('REP', 'low').values())
-share_H = 100 * A_D / (A_D + A_R)
-share_L = 100 * B_D / (B_D + B_R)
+ranked = sorted(['DEM', 'REP', 'UNA'], key=lambda p: -CHANGE[p][0])
+WHO = {'DEM': 'Democrats', 'REP': 'Republicans', 'UNA': 'unaffiliated voters'}
+
+
+def moved(p):
+    v = CHANGE[p][0]
+    return f'{"up" if v >= 0 else "down"} {abs(v):.0f}% from {WHO[p]}'
+
+
+party_text = (f'Compared with 2022, early votes are projected {moved(ranked[0])}, '
+              f'{moved(ranked[1])} and {moved(ranked[2])}. '
+f'Democrats hold <b>{DSHARE[0]:.1f}%</b> of the two-party early vote in the forecast '
+              f'(90% range {DSHARE[1]:.1f}&ndash;{DSHARE[2]:.1f}%), against {DSHARE22:.1f}% in 2022. '
+              f'Their share of votes banked so far is higher, {DSHARE_BANK:.1f}%, because Democrats have voted '
+              f'earlier in the period than Republicans.')
 
 # --- chart ----------------------------------------------------------------
 W, H, L, R, T, Bm = 860, 330, 66, 18, 18, 40
@@ -163,10 +168,9 @@ def cum(d):
     return out
 
 
-CHI, CLO = cum(HI), cum(LO)
 C22, C24 = cum({k: b22[k]['total'] for k in b22}), cum({k: b24[k]['total'] for k in b24})
 COBS = cum({k: obs[k]['total'] for k in obs})
-MAXV = max(CHI[17], CLO[17], C24[17]) * 1.06
+MAXV = max(C['cum'][17][2], C24[17]) * 1.06
 
 
 def x(k):
@@ -194,12 +198,17 @@ for k in (1, 5, 9, 13, 17):
     grid.append(f'<text x="{x(k):.1f}" y="{H-Bm+16}" text-anchor="middle" font-size="10.5" fill="#888">'
                 f'{date_of(k).strftime("%b %-d")}</text>')
 
+band_ks = range(LAST, 18)
+band = ('<polygon points="' + ' '.join(f"{x(k):.1f},{y(C['cum'][k][2]):.1f}" for k in band_ks) + ' '
+        + ' '.join(f"{x(k):.1f},{y(C['cum'][k][1]):.1f}" for k in reversed(band_ks))
+        + '" fill="#2b6cb0" fill-opacity=".14" stroke="none"/>') if LAST < 17 else ''
+
 chart = f'''<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Cumulative in-person early votes">
 {''.join(grid)}
 {pline(C24, '#cfd6dd', 2)}
 {pline(C22, '#9aa5b1', 2)}
-{pline(CHI, '#2b6cb0', 2, dash='5 4')}
-{pline(CLO, '#c05621', 2, dash='2 4')}
+{band}
+{pline({k: C['cum'][k][0] for k in range(LAST, 18)}, '#2b6cb0', 2, dash='5 4')}
 {pline(COBS, '#12395c', 3.2, last=LAST)}
 <circle cx="{x(LAST):.1f}" cy="{y(COBS[LAST]):.1f}" r="4" fill="#12395c"/>
 <text x="{L}" y="12" font-size="11" fill="#777">cumulative in-person early votes</text>
@@ -208,20 +217,23 @@ chart = f'''<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Cumul
 # --- callout --------------------------------------------------------------
 nxt = list(range(LAST + 1, min(LAST + 4, 18)))
 if nxt:
-    watch = (f'<b>What to watch.</b> Day {nxt[0]} ({date_of(nxt[0]).strftime("%b %-d")}) is next. '
-             f'The persistent path expects {", ".join(f"{HI[k]:,}" for k in nxt)}; '
-             f'the surge-stops path expects {", ".join(f"{LO[k]:,}" for k in nxt)}.')
+    watch = (f'<b>What to watch.</b> Day {nxt[0]} ({date_of(nxt[0]).strftime("%a %b %-d")}) is next: '
+             f'expect about <b>{C["day"][nxt[0]][0]:,}</b> votes '
+             f'(90% range {C["day"][nxt[0]][1]:,}&ndash;{C["day"][nxt[0]][2]:,}).')
 elif LAST < 17:
     watch = '<b>No data yet today.</b>'
 else:
     watch = ('<b>Early voting has closed.</b> The forecasts below are final; the scorecard shows how they did '
              'against each day as it arrived.')
 
-if errs:
-    track = (f'<div class="note"><b>Track record.</b> {len(errs)} day(s) scored against the forecast issued the day before. '
-             f'Mean absolute error <b>{mae:,.0f}</b> votes per day; average outcome was '
-             f'<b>{mean_ratio:.2f}&times;</b> the persistent path, so the model was '
-             f'{"too low" if bias > 0 else "too high"} by {abs(bias):,.0f} votes a day on average.</div>')
+if cerrs:
+    track = (f'<div class="note"><b>Track record.</b> {len(cerrs)} day(s) scored against the forecast issued the day before: '
+             f'mean absolute error <b>{c_mae:,.0f}</b> votes per day, and <b>{c_in} of {len(cerrs)}</b> landed inside the 90% range.</div>')
+elif rerrs:
+    track = (f'<div class="note"><b>Track record.</b> No issued forecast has been scored yet. Replayed on days '
+             f'{rerrs[0][0]}&ndash;{rerrs[-1][0]} using only the data available the night before, the forecast missed by '
+             f'{sum(abs(a - m) for _, a, m, _ in rerrs) / len(rerrs):,.0f} votes a day on average, and '
+             f'{r_in} of {len(rerrs)} days landed inside the 90% range.</div>')
 else:
     track = ('<div class="note"><b>No scored days yet.</b> The first forecast was issued after day '
              f'{sorted(VIN)[0] if VIN else LAST}; accuracy appears once a full day has passed.</div>')
@@ -256,12 +268,16 @@ th,td{{padding:6px 8px;border-bottom:1px solid #efefef;text-align:right;white-sp
 th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){{text-align:left}}
 th{{background:#f5f6f8;font-weight:600;font-size:12.5px;color:#444}}
 tr.future td{{color:#9aa3ad}}
+.rng{{color:var(--mut);font-size:12px}}
 .hi{{color:var(--green);font-weight:600}} .lo{{color:var(--red);font-weight:600}} .ok{{color:#555}}
 .note{{background:#fff;border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:4px;padding:11px 14px;font-size:13.5px;margin:18px 0}}
 .legend{{font-size:12px;color:#555;margin:2px 0 8px;display:flex;flex-wrap:wrap;gap:14px}}
 .legend i{{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}}
 .dot{{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}}
-.dot.dem{{background:var(--blue)}} .dot.rep{{background:var(--red)}} .dot.una{{background:#8a8f98}}
+.dot.dem{{background:var(--blue)}} .dot.rep{{background:var(--red)}} .dot.una{{background:#8a8f98}} .dot.oth{{background:#c9a227}}
+tr.tot td{{border-top:2px solid #ddd;font-weight:600}}
+table.party td{{vertical-align:top}}
+table.party td:nth-child(n+2),table.party th:nth-child(n+2){{text-align:right}}
 footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}}
 @media(max-width:640px){{.cards{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:21px}}}}
 </style></head><body><div class="wrap">
@@ -273,9 +289,9 @@ footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-s
 
 <div class="cards">
 <div class="card"><div class="k">Banked so far</div><div class="v">{BANKED:,}</div><div class="n">in-person early votes</div></div>
-<div class="card"><div class="k">Pace vs 2022</div><div class="v">{S['total']:.2f}&times;</div><div class="n">same days, 2022</div></div>
-<div class="card"><div class="k">Projected total</div><div class="v">{TOT_LO/1e6:.2f}&ndash;{TOT_HI/1e6:.2f}M</div><div class="n">surge stops / persists</div></div>
-<div class="card"><div class="k">Democratic share</div><div class="v">{bank_share:.1f}%</div><div class="n">of banked D+R</div></div>
+<div class="card"><div class="k">Projected total</div><div class="v">{MID/1e6:.2f}M</div><div class="n">90% range {MLO/1e6:.2f}&ndash;{MHI/1e6:.2f}M</div></div>
+<div class="card"><div class="k">Change vs 2022</div><div class="v">{signed(TOT_CHANGE[0])}</div><div class="n">range {signed(TOT_CHANGE[1])} to {signed(TOT_CHANGE[2])}</div></div>
+<div class="card"><div class="k">Dem share of D+R</div><div class="v">{DSHARE[0]:.1f}%</div><div class="n">range {DSHARE[1]:.1f}&ndash;{DSHARE[2]:.1f}% &middot; 2022: {DSHARE22:.1f}%</div></div>
 </div>
 
 <div class="note">{watch}</div>
@@ -284,30 +300,30 @@ footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-s
 <h2>Prediction vs actual</h2>
 <div class="legend">
 <span><i style="background:#12395c"></i>2026 observed</span>
-<span><i style="background:#2b6cb0"></i>persistent path</span>
-<span><i style="background:#c05621"></i>surge-stops path</span>
+<span><i style="background:#2b6cb0"></i>forecast, with 90% range</span>
 <span><i style="background:#9aa5b1"></i>2022</span>
 <span><i style="background:#cfd6dd"></i>2024</span>
 </div>
 {chart}
-<div class="sub" style="margin:2px 0 14px">Cumulative in-person early votes. For days already observed, the forecast shown is the one issued the day before, not a revised model.</div>
+<div class="sub" style="margin:2px 0 14px">Cumulative in-person early votes. The shaded band is the 90% range for the running total.</div>
 
 <table>
-<tr><th>Day</th><th>Date</th><th>Dow</th><th>Persistent</th><th>Surge stops</th><th>Actual</th><th>Act/Persist</th><th>Act/Stop</th></tr>
+<tr><th>Day</th><th>Date</th><th>Forecast</th><th>90% range</th><th>Actual</th><th>Act/Fcst</th></tr>
 {scorecard}
 </table>
-<p class="sub">Ratios near 1.00 mean that day's forecast was accurate. Past rows use the vintage issued after the previous day's data; future rows use the current estimate.</p>
+<p class="sub">Past rows show the forecast issued after the previous day's data, with the ratio in green or red when the actual fell outside the range. Future rows use the current estimate. &#8224; Replayed: the same model run on data through the previous day, after the fact, not a forecast issued at the time.</p>
 
-<h2>By party</h2>
-<table>
-<tr><th>Party</th><th>Banked</th><th>Pace vs 2022</th><th>Last 3 days</th><th>Persistent total</th><th>Fading total</th></tr>
+<h2>By party, compared with 2022</h2>
+<table class="party">
+<tr><th>Party</th><th>2022 final</th><th>2026 forecast</th><th>Change</th><th>2022 share</th><th>2026 share</th></tr>
 {party_table}
 </table>
-<p>Republicans are tracking 2022 almost exactly; the increase is concentrated among Democrats and unaffiliated voters. The early two-party split lands at <b>{share_H:.1f}%</b> Democratic on the persistent path or <b>{share_L:.1f}%</b> on the surge-stops path, against 53.9% in 2022 and 48.9% in 2024.</p>
+<p class="sub">Votes cast by voters registered with each party, across all 17 days of in-person early voting. Ranges are 90% intervals.</p>
+<p>{party_text}</p>
 
 <h2>Method</h2>
-<p>Every run recomputes each party's multiple of 2022 from all days observed so far, then applies it to 2022's remaining daily profile. The <b>persistent path</b> holds that multiple through the remaining days. The <b>surge-stops path</b> assumes the extra votes were pulled forward and the remaining days run at 2022's exact levels, so the two bracket the pull-forward question. The two bracket the pull-forward question: whether the surge is more turnout or the same voters voting earlier.</p>
-<p>Because the model is re-estimated daily, each run also records the forecast it just issued in <code>data/vintages.json</code>, keyed by the last day of data it had seen. Accuracy is always scored against the vintage issued immediately before the day being scored, so a revised model can never be graded on hindsight. All three cycles open on a Thursday and close on a Saturday, so days-until-election needs no weekday adjustment. The full eight-section analysis is in the <a href="report.html">report</a>.</p>
+<p>Every run re-estimates the forecast from all days observed so far. For each party it fits a trend to the 2026 multiple of the prior cycle across the weekdays seen so far (weekends move with site schedules), then extends that trend against 2022's remaining days and, separately, 2024's. The two cycles disagree about the final stretch, with 2022 ending in a surge and 2024 front-loaded, so the forecast splits the difference. The 90% ranges come from 4,000 simulations that redraw each trend from its sampling error, let the late-period shape land anywhere from one cycle's profile to past the other's, and add day-to-day noise at the size the fit has shown so far. Shares and changes are computed within each simulation, so their ranges reflect how the parties move together.</p>
+<p>Each run records the forecast it issued in <code>data/vintages.json</code>, keyed by the last day of data it had seen, and every day is scored against the forecast issued the night before, so a revised model is never graded on hindsight. All three cycles open on a Thursday and close on a Saturday, so days need no weekday adjustment. The full eight-section analysis is in the <a href="report.html">report</a>.</p>
 
 <footer>Built {stamp}. Source: NCSBE ENRS daily absentee files. Party registration is not vote choice; these are turnout forecasts, not outcome forecasts.</footer>
 </div></body></html>'''
@@ -322,22 +338,21 @@ open('_site/report.html', 'w').write(rep)
 
 json.dump({
     'through': str(THROUGH), 'last_day': LAST, 'banked': BANKED,
-    'pace_vs_2022': round(S['total'], 4),
-    'projection': {'surge_stops': TOT_LO, 'persistent': TOT_HI},
-    'scales': {p: round(S[p], 4) for p in PARTS},
-    'recent_scales': {p: round(RECENT[p], 4) for p in PARTS},
-    'accuracy': {'n': len(errs), 'mae': round(mae) if mae is not None else None,
-                 'mean_ratio': round(mean_ratio, 3) if mean_ratio else None},
+    'projection': {'total': MID, 'total_90': [MLO, MHI],
+                   'change_vs_2022_pct': [round(v, 1) for v in TOT_CHANGE],
+                   'dem_two_party_share_pct': [round(v, 1) for v in DSHARE],
+                   'dem_two_party_share_2022_pct': round(DSHARE22, 1)},
+    'party': {p: {'final_2022': F22[p], 'banked': BANK[p],
+                  'forecast': C['party'][p][0], 'forecast_90': list(C['party'][p][1:]),
+                  'change_vs_2022_pct': [round(v, 1) for v in CHANGE[p]],
+                  'share_pct': [round(v, 1) for v in SHARE[p]],
+                  'share_2022_pct': round(100 * F22[p] / T22, 1)} for p in PARTS},
     'daily': [{'day': k, 'date': str(date_of(k)),
-               'persistent': HI[k], 'surge_stops': LO[k],
-               'actual': obs[k]['total'] if k <= LAST else None,
-               'dem_actual': obs[k]['DEM'] if k <= LAST else None,
-               'rep_actual': obs[k]['REP'] if k <= LAST else None}
+               'forecast': C['day'][k][0] if k > LAST else None,
+               'forecast_90': [C['day'][k][1], C['day'][k][2]] if k > LAST else None,
+               'actual': obs[k]['total'] if k <= LAST else None}
               for k in range(1, 18)],
 }, open('_site/data.json', 'w'), indent=1)
 
-if errs:
-    print(f"built _site/  day {LAST}/17  banked {BANKED:,}  persistent {TOT_HI:,}  stops {TOT_LO:,}  "
-          f"MAE {mae:,.0f} over {len(errs)} day(s)")
-else:
-    print(f"built _site/  day {LAST}/17  banked {BANKED:,}  persistent {TOT_HI:,}  stops {TOT_LO:,}  no scored days yet")
+print(f"built _site/  day {LAST}/17  banked {BANKED:,}  forecast {MID:,} [{MLO:,}-{MHI:,}]  "
+      f"D share {DSHARE[0]:.1f}% [{DSHARE[1]:.1f}-{DSHARE[2]:.1f}]")

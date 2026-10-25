@@ -3,15 +3,12 @@
 A live forecast of North Carolina in-person early voting, rebuilt each morning
 from the NCSBE daily absentee file and published on GitHub Pages.
 
-Two forecasts are issued with every run:
-
-- **Persistent** — each party's current multiple of 2022 holds through the
-  remaining days.
-- **Surge stops** — the extra votes were pulled forward and the remaining days
-  run at 2022's exact levels.
-
-They bracket the question the data cannot settle: more turnout, or the same
-voters voting earlier.
+Each run issues one forecast with 90% ranges, for every remaining day, the
+17-day total, and each party's votes, change from 2022 and share
+(`work/central.py`). It fits a trend to each party's 2026 multiple over the
+weekdays observed so far, extends it against both the 2022 and 2024 daily
+profiles, and splits the difference; the ranges come from simulation over trend
+error, the 2022-vs-2024 shape disagreement, and day-level noise.
 
 Every run appends the forecast it just made to `data/vintages.json`, keyed by
 the last day of data it had seen. Accuracy is scored against the vintage issued
