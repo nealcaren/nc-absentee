@@ -12,6 +12,7 @@ Standard library only.
 """
 import json, os, datetime
 from central import central, band, GROUPS
+from geography import geography
 
 BASE = json.load(open('data/baseline.json'))
 OBS = json.load(open('data/observed.json'))
@@ -155,6 +156,36 @@ f'Democrats hold <b>{DSHARE[0]:.1f}%</b> of the two-party early vote in the fore
               f'(90% range {DSHARE[1]:.1f}&ndash;{DSHARE[2]:.1f}%), against {DSHARE22:.1f}% in 2022. '
               f'Their share of votes banked so far is higher, {DSHARE_BANK:.1f}%, because Democrats have voted '
               f'earlier in the period than Republicans.')
+
+# --- unaffiliated geography ---------------------------------------------
+GEO = None
+if OBS.get('counties') and os.path.exists('data/county_baseline.json'):
+    GEO = geography(json.load(open('data/county_baseline.json')), OBS['counties'], LAST)
+
+geo_section = ''
+if GEO:
+    grow = sorted(GEO['growth'].items(), key=lambda kv: -kv[1])
+    name = lambda c: c.title().replace('Mcdowell', 'McDowell')
+    fast = ', '.join(f'{name(c)} {g:.2f}&times;' for c, g in grow[:4])
+    slow = ', '.join(f'{name(c)} {g:.2f}&times;' for c, g in grow[-3:])
+    grow_rows = '\n'.join(
+        f'<tr><td>{r["label"]} <span class="rng">({r["note"]})</span></td><td>{r["counties"]}</td>'
+        f'<td>{100 * r["share_2022"]:.1f}%</td><td><b>{100 * r["share_2026"]:.1f}%</b></td>'
+        f'<td>{100 * (r["share_2026"] - r["share_2022"]):+.1f}</td><td>{r["growth"]:.2f}&times;</td></tr>'
+        for r in GEO['rows'])
+    sh = [100 * (b - a) for a, b in GEO['shifts']]
+    mid = sh[1]
+    toward = 'Democrats' if mid < 0 else 'Republicans'
+    geo_section = f'''<h2>Where unaffiliated voters are coming from</h2>
+<table class="party">
+<tr><th>County type, by 2022 early-vote result</th><th>Counties</th><th>2022</th><th>2026</th><th>Change (pts)</th><th>Growth</th></tr>
+{grow_rows}
+</table>
+<p class="sub">Share of the state's unaffiliated in-person early voters living in each type of county, over the first {LAST} days of early voting in each year.</p>
+<p>Unaffiliated early votes are up {GEO['una_growth']:.2f}&times; over the same days of 2022, but the growth is uneven. Among the larger counties it is fastest in {fast}, and slowest in {slow}. If each county's unaffiliated voters break the way they did in 2022, the shift in where they live moves the statewide unaffiliated vote <b>{abs(mid):.1f} points toward {toward}</b> ({min(map(abs, sh)):.1f} to {max(map(abs, sh)):.1f} across assumptions about party loyalty).</p>
+<p class="sub">How unaffiliated voters break overall cannot be estimated from county results: the 2022 total fits anything from about 35% to 60% Republican, depending on how many registered Democrats voted Republican and the reverse. Each county's break relative to the others is better determined, so the shift is reported rather than the level. It assumes a new unaffiliated voter in, say, Wake votes like Wake's 2022 unaffiliated voters; if the surge is younger and newer to the rolls, the true shift is probably larger.</p>
+
+'''
 
 # --- chart ----------------------------------------------------------------
 W, H, L, R, T, Bm = 860, 330, 66, 18, 18, 40
@@ -321,7 +352,7 @@ footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-s
 <p class="sub">Votes cast by voters registered with each party, across all 17 days of in-person early voting. Ranges are 90% intervals.</p>
 <p>{party_text}</p>
 
-<h2>Method</h2>
+{geo_section}<h2>Method</h2>
 <p>Every run re-estimates the forecast from all days observed so far. For each party it fits a trend to the 2026 multiple of the prior cycle across the weekdays seen so far (weekends move with site schedules), then extends that trend against 2022's remaining days and, separately, 2024's. The two cycles disagree about the final stretch, with 2022 ending in a surge and 2024 front-loaded, so the forecast splits the difference. The 90% ranges come from 4,000 simulations that redraw each trend from its sampling error, let the late-period shape land anywhere from one cycle's profile to past the other's, and add day-to-day noise at the size the fit has shown so far. Shares and changes are computed within each simulation, so their ranges reflect how the parties move together.</p>
 <p>Each run records the forecast it issued in <code>data/vintages.json</code>, keyed by the last day of data it had seen, and every day is scored against the forecast issued the night before, so a revised model is never graded on hindsight. All three cycles open on a Thursday and close on a Saturday, so days need no weekday adjustment. The full eight-section analysis is in the <a href="report.html">report</a>.</p>
 
@@ -347,6 +378,10 @@ json.dump({
                   'change_vs_2022_pct': [round(v, 1) for v in CHANGE[p]],
                   'share_pct': [round(v, 1) for v in SHARE[p]],
                   'share_2022_pct': round(100 * F22[p] / T22, 1)} for p in PARTS},
+    'unaffiliated_geography': None if not GEO else {
+        'bins': GEO['rows'],
+        'una_rep_share_shift_pts': [round(100 * (b - a), 2) for a, b in GEO['shifts']],
+        'una_growth_same_days': round(GEO['una_growth'], 3)},
     'daily': [{'day': k, 'date': str(date_of(k)),
                'forecast': C['day'][k][0] if k > LAST else None,
                'forecast_90': [C['day'][k][1], C['day'][k][2]] if k > LAST else None,

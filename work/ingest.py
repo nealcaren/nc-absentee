@@ -64,6 +64,7 @@ def fetch():
 def main():
     path = fetch()
     days = collections.defaultdict(lambda: collections.Counter())
+    counties = collections.defaultdict(lambda: collections.Counter())
     z = zipfile.ZipFile(path)
     with z.open(z.namelist()[0]) as fh:
         for row in csv.DictReader(io.TextIOWrapper(fh, encoding='utf-8', errors='replace')):
@@ -82,6 +83,7 @@ def main():
             days[k]['total'] += 1
             p = row['voter_party_code']
             days[k][p if p in PARTS else 'OTH'] += 1
+            counties[row['county_desc'].strip()][p if p in ('DEM', 'REP', 'UNA') else 'OTH'] += 1
 
     out = {
         'election': str(ELECTION),
@@ -89,6 +91,8 @@ def main():
         'through': str(max(ELECTION - datetime.timedelta(days=20 - k) for k in days)),
         'last_day': max(days),
         'days': {str(k): {p: int(days[k][p]) for p in PARTS + ['OTH', 'total']} for k in sorted(days)},
+        # cumulative in-person early voters by county and party, for the geography section
+        'counties': {c: dict(counties[c]) for c in sorted(counties)},
     }
     with open('data/observed.json', 'w') as f:
         json.dump(out, f, indent=1)

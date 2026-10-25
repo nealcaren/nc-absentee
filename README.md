@@ -21,7 +21,11 @@ never be graded on hindsight.
 work/ingest.py             download + parse the current absentee file -> data/observed.json
 work/build_site.py         build _site/ from baseline + observed + vintages
 work/bootstrap_baseline.py one-time: 2022/2024 archives -> data/baseline.json
+work/bootstrap_counties.py one-time: 2022 archive + county results -> data/county_baseline.json
+work/central.py            forecast and 90% ranges
+work/geography.py          where unaffiliated voters come from, and the implied shift
 data/baseline.json         daily counts by party, 2022 and 2024 (committed)
+data/county_baseline.json  2022 county early voters by day and party, plus Senate One Stop results
 data/observed.json         2026 daily counts (committed, updated by CI)
 data/vintages.json         every forecast ever issued (committed, updated by CI)
 analysis/                  static eight-section report and supporting CSVs
