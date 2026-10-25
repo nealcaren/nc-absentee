@@ -12,7 +12,7 @@ Standard library only.
 """
 import json, os, datetime
 from central import central, band, GROUPS
-from geography import geography
+from geography import geography, vote_choice
 
 BASE = json.load(open('data/baseline.json'))
 OBS = json.load(open('data/observed.json'))
@@ -187,6 +187,30 @@ if GEO:
 
 '''
 
+# --- bottom line: projected Democratic vs Republican early vote ----------
+VC = None
+finish = ''
+if GEO:
+    VC = vote_choice(json.load(open('data/county_baseline.json')), OBS['counties'], PT, SIMS)
+    (dm, dlo, dhi), (rm, rlo, rhi), (mm, mlo, mhi) = VC['dem'], VC['rep'], VC['margin']
+    ds = VC['dem_share']
+    a22d, a22r = VC['actual_2022']
+    lead = 'Democrats' if mm >= 0 else 'Republicans'
+    pct = 100 * dm / (dm + rm)
+    finish = f'''<section class="finish">
+<div class="fk">The bottom line &middot; projected in-person early vote, all 17 days</div>
+<div class="duel">
+<div class="side dem"><div class="who">Democratic candidates</div><div class="big">{dm/1e6:.2f}M</div><div class="rng">90% range {dlo/1e6:.2f}&ndash;{dhi/1e6:.2f}M</div></div>
+<div class="side rep"><div class="who">Republican candidates</div><div class="big">{rm/1e6:.2f}M</div><div class="rng">90% range {rlo/1e6:.2f}&ndash;{rhi/1e6:.2f}M</div></div>
+</div>
+<div class="bar"><span class="bd" style="width:{pct:.1f}%"></span><span class="br" style="width:{100-pct:.1f}%"></span><i style="left:50%"></i></div>
+<div class="margin">{lead} <b>+{abs(mm)/1000:,.0f}k</b> &middot; {ds[0]:.1f}% of the two-party early vote (90% range {ds[1]:.1f}&ndash;{ds[2]:.1f}%)</div>
+<div class="was">2022 early vote, US Senate: Beasley {a22d/1e6:.2f}M, Budd {a22r/1e6:.2f}M, Democrats +{(a22d-a22r)/1000:,.0f}k ({100*a22d/(a22d+a22r):.1f}%).</div>
+<p class="sub">Each party's forecast turnout, voting the way its members did in 2022 in the same county: registered Democrats and Republicans mostly loyal (crossover up to 12% and 6%), unaffiliated voters at their county's 2022 rate, weighted by where they are turning out now. The range covers turnout, the loyalty assumption, and a 1.5-point swing in either direction from 2022 behavior. Early votes only; Election Day voters lean more Republican, so this is not a statewide result.</p>
+</section>
+
+'''
+
 # --- chart ----------------------------------------------------------------
 W, H, L, R, T, Bm = 860, 330, 66, 18, 18, 40
 
@@ -309,8 +333,21 @@ tr.future td{{color:#9aa3ad}}
 tr.tot td{{border-top:2px solid #ddd;font-weight:600}}
 table.party td{{vertical-align:top}}
 table.party td:nth-child(n+2),table.party th:nth-child(n+2){{text-align:right}}
+.finish{{margin:44px 0 10px;padding:22px 22px 14px;background:#fff;border:1px solid var(--line);border-top:4px solid var(--deep);border-radius:8px}}
+.finish .fk{{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);margin-bottom:12px}}
+.duel{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+.side .who{{font-size:13px;font-weight:600}} .side.dem .who{{color:var(--blue)}} .side.rep .who{{color:var(--red)}}
+.side.rep{{text-align:right}}
+.side .big{{font-size:44px;font-weight:700;letter-spacing:-1.5px;line-height:1.1}}
+.side.dem .big{{color:var(--blue)}} .side.rep .big{{color:var(--red)}}
+.bar{{position:relative;display:flex;height:14px;border-radius:7px;overflow:hidden;margin:14px 0 10px}}
+.bar .bd{{background:var(--blue)}} .bar .br{{background:var(--red)}}
+.bar i{{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff}}
+.finish .margin{{font-size:17px;text-align:center}}
+.finish .was{{font-size:13px;color:var(--mut);text-align:center;margin:4px 0 10px}}
+@media(max-width:640px){{.side .big{{font-size:32px}}}}
 footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}}
-@media(max-width:640px){{.cards{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:21px}}}}
+@media(max-width:640px){{.cards{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:21px}}table{{display:block;overflow-x:auto}}.finish{{padding:16px 14px 10px}}}}
 </style></head><body><div class="wrap">
 <header class="top">
 <h1>North Carolina early voting, 2026</h1>
@@ -352,11 +389,11 @@ footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-s
 <p class="sub">Votes cast by voters registered with each party, across all 17 days of in-person early voting. Ranges are 90% intervals.</p>
 <p>{party_text}</p>
 
-{geo_section}<h2>Method</h2>
+{geo_section}{finish}<h2>Method</h2>
 <p>Every run re-estimates the forecast from all days observed so far. For each party it fits a trend to the 2026 multiple of the prior cycle across the weekdays seen so far (weekends move with site schedules), then extends that trend against 2022's remaining days and, separately, 2024's. The two cycles disagree about the final stretch, with 2022 ending in a surge and 2024 front-loaded, so the forecast splits the difference. The 90% ranges come from 4,000 simulations that redraw each trend from its sampling error, let the late-period shape land anywhere from one cycle's profile to past the other's, and add day-to-day noise at the size the fit has shown so far. Shares and changes are computed within each simulation, so their ranges reflect how the parties move together.</p>
 <p>Each run records the forecast it issued in <code>data/vintages.json</code>, keyed by the last day of data it had seen, and every day is scored against the forecast issued the night before, so a revised model is never graded on hindsight. All three cycles open on a Thursday and close on a Saturday, so days need no weekday adjustment. The full eight-section analysis is in the <a href="report.html">report</a>.</p>
 
-<footer>Built {stamp}. Source: NCSBE ENRS daily absentee files. Party registration is not vote choice; these are turnout forecasts, not outcome forecasts.</footer>
+<footer>Built {stamp}. Source: NCSBE ENRS daily absentee files. Party registration is not vote choice; the vote projection assumes 2022 behavior and covers early votes only.</footer>
 </div></body></html>'''
 
 os.makedirs('_site', exist_ok=True)
@@ -378,6 +415,10 @@ json.dump({
                   'change_vs_2022_pct': [round(v, 1) for v in CHANGE[p]],
                   'share_pct': [round(v, 1) for v in SHARE[p]],
                   'share_2022_pct': round(100 * F22[p] / T22, 1)} for p in PARTS},
+    'vote_projection': None if not VC else {
+        'dem': VC['dem'], 'rep': VC['rep'], 'margin': VC['margin'],
+        'dem_two_party_pct': [round(v, 1) for v in VC['dem_share']],
+        'actual_2022_dem_rep': VC['actual_2022']},
     'unaffiliated_geography': None if not GEO else {
         'bins': GEO['rows'],
         'una_rep_share_shift_pts': [round(100 * (b - a), 2) for a, b in GEO['shifts']],

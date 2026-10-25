@@ -10,6 +10,11 @@ weekdays observed so far, extends it against both the 2022 and 2024 daily
 profiles, and splits the difference; the ranges come from simulation over trend
 error, the 2022-vs-2024 shape disagreement, and day-level noise.
 
+The page closes with a projected Democratic vs Republican early vote
+(`work/geography.py`): forecast turnout by party, voting as its members did in
+2022 in the same county, with ranges over turnout, partisan loyalty, and a
+1.5-point swing from 2022 behavior. Early votes only.
+
 Every run appends the forecast it just made to `data/vintages.json`, keyed by
 the last day of data it had seen. Accuracy is scored against the vintage issued
 immediately before the day being scored, so a model that has been revised can
@@ -63,6 +68,6 @@ download when nothing has been re-posted.
 
 ## Caveats
 
-These are turnout forecasts, not outcome forecasts. Party registration is not
+The vote projection is the only outcome estimate, and it assumes 2022 behavior. Party registration is not
 vote choice, and early-vote composition measures when people vote rather than
 how many will. See the report for the full discussion.
