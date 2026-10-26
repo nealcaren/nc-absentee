@@ -53,7 +53,7 @@ def band(xs, mid):
 def central(obs, b22, b24, last, sims=4000):
     """Returns {'day': {k: (mid, lo, hi)}, 'cum': {k: (mid, lo, hi)},
     'total': (mid, lo, hi), 'party': {grp: (mid, lo, hi)},
-    'party_cum': {grp: {k: (mid, lo, hi)}},
+    'party_cum': {grp: {k: (mid, lo, hi)}}, 'party_day': {grp: {k: (mid, lo, hi)}},
     'party_point': {grp: mid}, 'party_sims': {grp: [draw, ...]}} for the full 17 days.
     Draws in party_sims are aligned, so functions of several parties (shares)
     can be banded with band()."""
@@ -78,6 +78,7 @@ def central(obs, b22, b24, last, sims=4000):
     cum_draws = {k: [] for k in future}
     party_draws = {grp: [] for grp in GROUPS}
     pcum_draws = {grp: {k: [] for k in future} for grp in GROUPS}
+    pday_draws = {grp: {k: [] for k in future} for grp in GROUPS}
     for _ in range(sims):
         z = rng.gauss(0, 1)
         per_day = {k: 0.0 for k in future}
@@ -92,6 +93,7 @@ def central(obs, b22, b24, last, sims=4000):
             for k in future:
                 per_day[k] += p[k]
                 prun += p[k]
+                pday_draws[grp][k].append(p[k])
                 pcum_draws[grp][k].append(prun)
         run = sum(banked.values())
         for k in future:
@@ -115,19 +117,22 @@ def central(obs, b22, b24, last, sims=4000):
             day[k] = rband(day_draws[k], mid)
             run += mid
             cum[k] = rband(cum_draws[k], run)
-    party_cum = {}
+    party_cum, party_day = {}, {}
     for grp in GROUPS:
-        run, party_cum[grp] = 0, {}
+        run, party_cum[grp], party_day[grp] = 0, {}, {}
         for k in range(1, N_DAYS + 1):
             if k <= last:
-                run += _g(obs[k], grp)
+                v = _g(obs[k], grp)
+                run += v
                 party_cum[grp][k] = (run, run, run)
+                party_day[grp][k] = (v, v, v)
             else:
                 run += point[grp][k]
                 party_cum[grp][k] = rband(pcum_draws[grp][k], run)
+                party_day[grp][k] = rband(pday_draws[grp][k], point[grp][k])
     party_point = {grp: banked[grp] + sum(point[grp].values()) for grp in GROUPS}
     if not future:
         party_draws = {grp: [banked[grp]] for grp in GROUPS}
     party = {grp: rband(party_draws[grp], party_point[grp]) for grp in GROUPS}
-    return {'day': day, 'cum': cum, 'total': cum[N_DAYS], 'party': party, 'party_cum': party_cum,
+    return {'day': day, 'cum': cum, 'total': cum[N_DAYS], 'party': party, 'party_cum': party_cum, 'party_day': party_day,
             'party_point': party_point, 'party_sims': party_draws}

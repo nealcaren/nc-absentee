@@ -71,7 +71,8 @@ if LAST < 17:
     v = VIN.setdefault(key, {'issued': str(datetime.date.today()), 'last_day': LAST, 'through': str(THROUGH)})
     fresh = {'central': {str(k): list(C['day'][k]) for k in range(LAST + 1, 18)},
              'total_central': list(C['total']),
-             'party_central': {p: list(C['party'][p]) for p in PARTS}}
+             'party_central': {p: list(C['party'][p]) for p in PARTS},
+             'party_day': {p: {str(k): list(C['party_day'][p][k]) for k in range(LAST + 1, 18)} for p in PARTS}}
     missing = {f: val for f, val in fresh.items() if f not in v}
     if missing:                             # keep the first forecast issued on a given information set
         v.update(missing)
@@ -121,6 +122,57 @@ scorecard = '\n'.join(rows)
 c_mae = sum(abs(a - m) for _, a, m, _ in cerrs) / len(cerrs) if cerrs else None
 c_in = sum(inside for *_, inside in cerrs)
 r_in = sum(inside for *_, inside in rerrs)
+
+# --- daily error by party -------------------------------------------------
+EPARTS = ['DEM', 'REP', 'UNA']
+_replays = {}
+
+
+def party_vintage(k):
+    """Each party's forecast for day k, issued after day k-1 (or replayed, flagged)."""
+    v = VIN.get(str(k - 1), {}).get('party_day')
+    if v:
+        return {p: v[p][str(k)] for p in PARTS}, False
+    if k - 1 < 5:
+        return None, False
+    if k not in _replays:
+        _replays[k] = central(obs, b22, b24, k - 1)['party_day']
+    return {p: list(_replays[k][p][k]) for p in PARTS}, True
+
+
+def err_cell(act, fc):
+    m, lo, hi = fc
+    e = act - m
+    cls = 'neg' if e < 0 else 'pos'
+    out = ' out' if not lo <= act <= hi else ''
+    txt = f'{e:+,}'.replace('-', '&minus;')
+    return (f'<td class="{cls}{out}" title="forecast {m:,} ({lo:,}&ndash;{hi:,}), actual {act:,}">{txt}</td>', e)
+
+
+erows, ERR = [], {p: [] for p in EPARTS + ['total']}
+for k in range(1, LAST + 1):
+    pv, replay = party_vintage(k)
+    tv, _ = vintage_central(k)
+    if not pv or not tv:
+        continue
+    cells = []
+    for p in EPARTS:
+        c, e = err_cell(grp(obs[k], p), pv[p])
+        cells.append(c)
+        ERR[p].append({'day': k, 'forecast': pv[p][0], 'actual': grp(obs[k], p), 'error': e,
+                       'replayed': replay})
+    c, e = err_cell(obs[k]['total'], tv)
+    cells.append(c)
+    ERR['total'].append({'day': k, 'forecast': tv[0], 'actual': obs[k]['total'], 'error': e})
+    mark = '&#8224;' if replay else ''
+    erows.append(f'<tr><td>{k}{mark}</td><td>{date_of(k).strftime("%a %b %-d")}</td>{"".join(cells)}</tr>')
+if erows:
+    mean = ''.join(f'<td>{round(sum(r["error"] for r in ERR[p]) / len(ERR[p])):+,}</td>'.replace('-', '&minus;')
+                   for p in EPARTS + ['total'])
+    erows.append(f'<tr class="tot"><td colspan="2">Average</td>{mean}</tr>')
+error_table = '\n'.join(erows)
+FIRST_PD = min((int(k) + 1 for k, v in VIN.items() if 'party_day' in v), default=LAST + 1)
+
 
 # --- party table ----------------------------------------------------------
 def signed(v):
@@ -341,6 +393,8 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),th:nth-child(3),td
 th{{background:#f5f6f8;font-weight:600;font-size:12.5px;color:#444}}
 tr.future td{{color:#9aa3ad}}
 .rng{{color:var(--mut);font-size:12px}}
+.neg{{color:var(--orange)}} .pos{{color:var(--green)}} td.out{{font-weight:700}}
+table.err td:nth-child(n+3){{font-variant-numeric:tabular-nums}}
 .hi{{color:var(--green);font-weight:600}} .lo{{color:var(--red);font-weight:600}} .ok{{color:#555}}
 .note{{background:#fff;border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:4px;padding:11px 14px;font-size:13.5px;margin:18px 0}}
 .legend{{font-size:12px;color:#555;margin:2px 0 8px;display:flex;flex-wrap:wrap;gap:14px}}
@@ -399,6 +453,13 @@ footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-s
 </table>
 <p class="sub">Past rows show the forecast issued after the previous day's data, with the ratio in green or red when the actual fell outside the range. Future rows use the current estimate. &#8224; Replayed: the same model run on data through the previous day, after the fact, not a forecast issued at the time.</p>
 
+<h2>Daily miss by party</h2>
+<table class="err">
+<tr><th>Day</th><th>Date</th><th>Democrats</th><th>Republicans</th><th>Unaffiliated</th><th>Total</th></tr>
+{error_table}
+</table>
+<p class="sub">Actual votes minus the forecast made the night before, using data through the previous day: <span class="neg">&minus;</span> means fewer votes than forecast, <span class="pos">+</span> more. Bold marks a day outside the 90% range; hover a cell for the numbers. A run of minus signs in one column means the model keeps overestimating that group, and its trend is drifting down. &#8224; Replayed after the fact; per-party forecasts were recorded from day {FIRST_PD} on.</p>
+
 <h2>By party, compared with 2022</h2>
 <table class="party">
 <tr><th>Party</th><th>2022 final</th><th>2026 forecast</th><th>Change</th><th>2022 share</th><th>2026 share</th></tr>
@@ -441,6 +502,7 @@ json.dump({
         'bins': GEO['rows'],
         'una_rep_share_shift_pts': [round(100 * (b - a), 2) for a, b in GEO['shifts']],
         'una_growth_same_days': round(GEO['una_growth'], 3)},
+    'daily_error_by_party': ERR,
     'daily': [{'day': k, 'date': str(date_of(k)),
                'forecast': C['day'][k][0] if k > LAST else None,
                'forecast_90': [C['day'][k][1], C['day'][k][2]] if k > LAST else None,
