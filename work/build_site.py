@@ -212,7 +212,9 @@ if GEO:
 '''
 
 # --- chart ----------------------------------------------------------------
-W, H, L, R, T, Bm = 860, 330, 66, 18, 18, 40
+W, H, L, R, T, Bm = 860, 330, 66, 96, 18, 40
+CPARTS = ['DEM', 'REP', 'UNA']
+COLOR = {'DEM': '#2b6cb0', 'REP': '#9b2c2c', 'UNA': '#6b7280'}
 
 
 def cum(d):
@@ -223,9 +225,9 @@ def cum(d):
     return out
 
 
-C22, C24 = cum({k: b22[k]['total'] for k in b22}), cum({k: b24[k]['total'] for k in b24})
-COBS = cum({k: obs[k]['total'] for k in obs})
-MAXV = max(C['cum'][17][2], C24[17]) * 1.06
+PC = C['party_cum']
+C22P = {p: cum({k: grp(b22[k], p) for k in b22}) for p in CPARTS}
+MAXV = max(max(PC[p][17][2], C22P[p][17]) for p in CPARTS) * 1.06
 
 
 def x(k):
@@ -236,37 +238,52 @@ def y(v):
     return H - Bm - v / MAXV * (H - T - Bm)
 
 
-def pline(series, color, width=2, dash=None, last=None):
-    ks = [k for k in sorted(series) if last is None or k <= last]
+def pline(series, color, width=2, dash=None, last=None, first=None, opacity=1):
+    ks = [k for k in sorted(series) if (last is None or k <= last) and (first is None or k >= first)]
     pts = ' '.join(f"{x(k):.1f},{y(series[k]):.1f}" for k in ks)
     d = f' stroke-dasharray="{dash}"' if dash else ''
+    o = f' stroke-opacity="{opacity}"' if opacity < 1 else ''
     return (f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="{width}"'
-            f' stroke-linejoin="round"{d}/>')
+            f' stroke-linejoin="round"{d}{o}/>')
 
 
 grid = []
-step = 1_000_000
+step = 250_000
 for v in range(0, int(MAXV) + 1, step):
     grid.append(f'<line x1="{L}" y1="{y(v):.1f}" x2="{W-R}" y2="{y(v):.1f}" stroke="#e8e8e8"/>')
-    grid.append(f'<text x="{L-8}" y="{y(v)+4:.1f}" text-anchor="end" font-size="10.5" fill="#888">{v/1e6:.0f}M</text>')
+    grid.append(f'<text x="{L-8}" y="{y(v)+4:.1f}" text-anchor="end" font-size="10.5" fill="#888">'
+                f'{v/1e6:.2f}M</text>'.replace('.00M', 'M').replace('0.50M', '0.5M').replace('1.50M', '1.5M').replace('>0M<', '>0<'))
 for k in (1, 5, 9, 13, 17):
     grid.append(f'<text x="{x(k):.1f}" y="{H-Bm+16}" text-anchor="middle" font-size="10.5" fill="#888">'
                 f'{date_of(k).strftime("%b %-d")}</text>')
 
+marks = []
 band_ks = range(LAST, 18)
-band = ('<polygon points="' + ' '.join(f"{x(k):.1f},{y(C['cum'][k][2]):.1f}" for k in band_ks) + ' '
-        + ' '.join(f"{x(k):.1f},{y(C['cum'][k][1]):.1f}" for k in reversed(band_ks))
-        + '" fill="#2b6cb0" fill-opacity=".14" stroke="none"/>') if LAST < 17 else ''
+for p in CPARTS:
+    col, pc = COLOR[p], PC[p]
+    if LAST < 17:
+        marks.append('<polygon points="' + ' '.join(f"{x(k):.1f},{y(pc[k][2]):.1f}" for k in band_ks) + ' '
+                     + ' '.join(f"{x(k):.1f},{y(pc[k][1]):.1f}" for k in reversed(band_ks))
+                     + f'" fill="{col}" fill-opacity=".13" stroke="none"/>')
+    marks.append(pline(C22P[p], col, 1.6, dash='2 3', opacity=.75))
+    marks.append(pline({k: pc[k][0] for k in pc}, col, 2, dash='5 4', first=LAST))
+    marks.append(pline({k: pc[k][0] for k in pc}, col, 3.2, last=LAST))
+    marks.append(f'<circle cx="{x(LAST):.1f}" cy="{y(pc[LAST][0]):.1f}" r="4" fill="{col}"/>')
 
-chart = f'''<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Cumulative in-person early votes">
+# end labels, nudged apart so they never overlap
+ends = sorted(((y(PC[p][17][0]), p) for p in CPARTS))
+for i in range(1, len(ends)):
+    if ends[i][0] - ends[i - 1][0] < 28:
+        ends[i] = (ends[i - 1][0] + 28, ends[i][1])
+for yy, p in ends:
+    marks.append(f'<text x="{W-R+8}" y="{yy:.1f}" font-size="11.5" font-weight="600" fill="{COLOR[p]}">'
+                 f'{WHO[p].split()[0].capitalize()}</text>'
+                 f'<text x="{W-R+8}" y="{yy+13:.1f}" font-size="11" fill="{COLOR[p]}">{PC[p][17][0]/1000:,.0f}k</text>')
+
+chart = f'''<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Cumulative in-person early votes by party, projected, with 2022">
 {''.join(grid)}
-{pline(C24, '#cfd6dd', 2)}
-{pline(C22, '#9aa5b1', 2)}
-{band}
-{pline({k: C['cum'][k][0] for k in range(LAST, 18)}, '#2b6cb0', 2, dash='5 4')}
-{pline(COBS, '#12395c', 3.2, last=LAST)}
-<circle cx="{x(LAST):.1f}" cy="{y(COBS[LAST]):.1f}" r="4" fill="#12395c"/>
-<text x="{L}" y="12" font-size="11" fill="#777">cumulative in-person early votes</text>
+{''.join(marks)}
+<text x="{L}" y="12" font-size="11" fill="#777">cumulative in-person early votes, by party registration</text>
 </svg>'''
 
 # --- callout --------------------------------------------------------------
@@ -365,15 +382,16 @@ footer{{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-s
 <div class="note">{watch}</div>
 {track}
 
-<h2>Prediction vs actual</h2>
+<h2>Projected early vote by party</h2>
 <div class="legend">
-<span><i style="background:#12395c"></i>2026 observed</span>
-<span><i style="background:#2b6cb0"></i>forecast, with 90% range</span>
-<span><i style="background:#9aa5b1"></i>2022</span>
-<span><i style="background:#cfd6dd"></i>2024</span>
+<span><i style="background:var(--blue)"></i>Democrats</span>
+<span><i style="background:var(--red)"></i>Republicans</span>
+<span><i style="background:#6b7280"></i>Unaffiliated</span>
 </div>
 {chart}
-<div class="sub" style="margin:2px 0 14px">Cumulative in-person early votes. The shaded band is the 90% range for the running total.</div>
+<div class="sub" style="margin:2px 0 14px">Cumulative in-person early votes by party registration. Solid lines are 2026 so far, dashed lines the forecast with its 90% range shaded, and dotted lines 2022 on the same day of early voting. Libertarian and other voters (about 1%) are left out.</div>
+
+<h2>Prediction vs actual</h2>
 
 <table>
 <tr><th>Day</th><th>Date</th><th>Forecast</th><th>90% range</th><th>Actual</th><th>Act/Fcst</th></tr>
