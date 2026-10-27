@@ -1,29 +1,29 @@
 {
  "election": "2026-11-03",
- "source_last_modified": "Mon, 26 Oct 2026 09:23:19 GMT",
- "through": "2026-10-25",
- "last_day": 11,
+ "source_last_modified": "Tue, 27 Oct 2026 09:24:01 GMT",
+ "through": "2026-10-26",
+ "last_day": 12,
  "days": {
   "1": {
-   "DEM": 96525,
-   "REP": 40477,
-   "UNA": 65906,
+   "DEM": 96542,
+   "REP": 40476,
+   "UNA": 65914,
    "LIB": 309,
    "OTH": 53,
-   "total": 203270
+   "total": 203294
   },
   "2": {
    "DEM": 86050,
-   "REP": 43672,
-   "UNA": 67652,
+   "REP": 43673,
+   "UNA": 67653,
    "LIB": 345,
    "OTH": 61,
-   "total": 197780
+   "total": 197782
   },
   "3": {
-   "DEM": 28000,
+   "DEM": 28001,
    "REP": 9989,
-   "UNA": 23582,
+   "UNA": 23581,
    "LIB": 148,
    "OTH": 29,
    "total": 61748
@@ -31,662 +31,672 @@
   "4": {
    "DEM": 12764,
    "REP": 2176,
-   "UNA": 9542,
+   "UNA": 9541,
    "LIB": 48,
    "OTH": 11,
-   "total": 24541
+   "total": 24540
   },
   "5": {
-   "DEM": 86504,
-   "REP": 48245,
-   "UNA": 68451,
+   "DEM": 86520,
+   "REP": 48249,
+   "UNA": 68459,
    "LIB": 375,
    "OTH": 65,
-   "total": 203640
+   "total": 203668
   },
   "6": {
-   "DEM": 75622,
+   "DEM": 75624,
    "REP": 47997,
    "UNA": 63470,
    "LIB": 405,
    "OTH": 60,
-   "total": 187554
+   "total": 187556
   },
   "7": {
-   "DEM": 67808,
-   "REP": 46985,
-   "UNA": 58666,
+   "DEM": 67816,
+   "REP": 46986,
+   "UNA": 58667,
    "LIB": 366,
    "OTH": 57,
-   "total": 173882
+   "total": 173892
   },
   "8": {
-   "DEM": 60427,
-   "REP": 47444,
-   "UNA": 56101,
+   "DEM": 60450,
+   "REP": 47464,
+   "UNA": 56108,
    "LIB": 384,
    "OTH": 65,
-   "total": 164421
+   "total": 164471
   },
   "9": {
-   "DEM": 65215,
-   "REP": 51242,
-   "UNA": 63234,
-   "LIB": 458,
+   "DEM": 65399,
+   "REP": 51326,
+   "UNA": 63358,
+   "LIB": 460,
    "OTH": 74,
-   "total": 180223
+   "total": 180617
   },
   "10": {
-   "DEM": 36779,
-   "REP": 18960,
-   "UNA": 32321,
-   "LIB": 243,
+   "DEM": 37099,
+   "REP": 19046,
+   "UNA": 32490,
+   "LIB": 245,
    "OTH": 39,
-   "total": 88342
+   "total": 88919
   },
   "11": {
-   "DEM": 17589,
-   "REP": 5448,
-   "UNA": 14569,
-   "LIB": 108,
+   "DEM": 18026,
+   "REP": 5493,
+   "UNA": 14802,
+   "LIB": 112,
    "OTH": 20,
-   "total": 37734
+   "total": 38453
+  },
+  "12": {
+   "DEM": 64865,
+   "REP": 55208,
+   "UNA": 62452,
+   "LIB": 502,
+   "OTH": 81,
+   "total": 183108
   }
  },
  "counties": {
   "ALAMANCE": {
-   "UNA": 7866,
-   "REP": 7079,
-   "DEM": 10381,
-   "OTH": 64
+   "UNA": 8788,
+   "REP": 8024,
+   "DEM": 11439,
+   "OTH": 74
   },
   "ALEXANDER": {
-   "REP": 1935,
-   "UNA": 1378,
-   "DEM": 814,
-   "OTH": 7
+   "REP": 2263,
+   "UNA": 1582,
+   "DEM": 918,
+   "OTH": 9
   },
   "ALLEGHANY": {
-   "UNA": 525,
-   "DEM": 433,
-   "REP": 690
+   "UNA": 591,
+   "DEM": 480,
+   "REP": 779,
+   "OTH": 1
   },
   "ANSON": {
-   "UNA": 525,
-   "DEM": 1480,
-   "REP": 357,
-   "OTH": 2
+   "UNA": 605,
+   "DEM": 1629,
+   "REP": 405,
+   "OTH": 3
   },
   "ASHE": {
-   "DEM": 953,
-   "REP": 1426,
-   "UNA": 1376,
+   "DEM": 1032,
+   "REP": 1630,
+   "UNA": 1525,
    "OTH": 7
   },
   "AVERY": {
-   "REP": 736,
-   "DEM": 276,
-   "UNA": 582,
+   "REP": 860,
+   "UNA": 658,
+   "DEM": 300,
    "OTH": 2
   },
   "BEAUFORT": {
-   "REP": 2175,
-   "DEM": 2095,
-   "UNA": 2055,
+   "REP": 2566,
+   "DEM": 2342,
+   "UNA": 2337,
    "OTH": 11
   },
   "BERTIE": {
-   "UNA": 429,
-   "DEM": 1613,
-   "REP": 199,
-   "OTH": 1
+   "UNA": 502,
+   "DEM": 1827,
+   "REP": 236,
+   "OTH": 2
   },
   "BLADEN": {
-   "DEM": 1936,
-   "REP": 792,
-   "UNA": 1128,
-   "OTH": 5
+   "DEM": 2132,
+   "REP": 910,
+   "UNA": 1304,
+   "OTH": 7
   },
   "BRUNSWICK": {
-   "DEM": 9306,
-   "UNA": 13349,
-   "REP": 12110,
-   "OTH": 64
+   "DEM": 10145,
+   "UNA": 14941,
+   "REP": 14155,
+   "OTH": 69
   },
   "BUNCOMBE": {
-   "DEM": 25824,
-   "UNA": 23606,
-   "REP": 7609,
-   "OTH": 139
+   "DEM": 28271,
+   "UNA": 26277,
+   "REP": 8679,
+   "OTH": 161
   },
   "BURKE": {
-   "REP": 4008,
-   "UNA": 3895,
-   "DEM": 3152,
-   "OTH": 28
+   "REP": 4666,
+   "UNA": 4363,
+   "DEM": 3478,
+   "OTH": 32
   },
   "CABARRUS": {
-   "REP": 6853,
-   "DEM": 10157,
-   "UNA": 9690,
-   "OTH": 80
+   "UNA": 10812,
+   "REP": 7877,
+   "DEM": 11362,
+   "OTH": 95
   },
   "CALDWELL": {
-   "DEM": 2129,
-   "REP": 4272,
-   "UNA": 3076,
-   "OTH": 21
+   "DEM": 2412,
+   "REP": 5033,
+   "UNA": 3491,
+   "OTH": 23
   },
   "CAMDEN": {
-   "UNA": 630,
-   "DEM": 289,
-   "REP": 361,
+   "UNA": 703,
+   "DEM": 312,
+   "REP": 441,
    "OTH": 6
   },
   "CARTERET": {
-   "REP": 6037,
-   "DEM": 2530,
-   "UNA": 4450,
-   "OTH": 25
+   "REP": 6944,
+   "DEM": 2774,
+   "UNA": 5029,
+   "OTH": 29
   },
   "CASWELL": {
-   "DEM": 1323,
-   "REP": 565,
-   "UNA": 771,
-   "OTH": 3
+   "DEM": 1485,
+   "REP": 652,
+   "UNA": 893,
+   "OTH": 4
   },
   "CATAWBA": {
-   "UNA": 7956,
-   "REP": 8960,
-   "DEM": 5227,
-   "OTH": 59
+   "UNA": 8762,
+   "REP": 10151,
+   "DEM": 5680,
+   "OTH": 65
   },
   "CHATHAM": {
-   "REP": 2936,
-   "UNA": 7944,
-   "DEM": 8805,
-   "OTH": 40
+   "REP": 3369,
+   "UNA": 8853,
+   "DEM": 9682,
+   "OTH": 48
   },
   "CHEROKEE": {
-   "REP": 1886,
-   "UNA": 1226,
-   "DEM": 605,
-   "OTH": 13
+   "REP": 2140,
+   "UNA": 1388,
+   "DEM": 675,
+   "OTH": 16
   },
   "CHOWAN": {
-   "UNA": 752,
-   "REP": 685,
-   "DEM": 867,
+   "UNA": 864,
+   "DEM": 988,
+   "REP": 790,
    "OTH": 7
   },
   "CLAY": {
-   "REP": 940,
-   "UNA": 708,
-   "DEM": 386,
+   "REP": 1070,
+   "UNA": 809,
+   "DEM": 428,
    "OTH": 4
   },
   "CLEVELAND": {
-   "DEM": 4478,
-   "REP": 3697,
-   "UNA": 3015,
-   "OTH": 28
+   "DEM": 4956,
+   "REP": 4340,
+   "UNA": 3415,
+   "OTH": 29
   },
   "COLUMBUS": {
-   "REP": 1197,
-   "DEM": 2050,
-   "UNA": 1335,
-   "OTH": 5
+   "REP": 1446,
+   "DEM": 2356,
+   "UNA": 1588,
+   "OTH": 7
   },
   "CRAVEN": {
-   "UNA": 4781,
-   "DEM": 5352,
-   "REP": 5489,
-   "OTH": 46
+   "UNA": 5426,
+   "DEM": 5902,
+   "REP": 6359,
+   "OTH": 57
   },
   "CUMBERLAND": {
-   "DEM": 18522,
-   "REP": 5858,
-   "UNA": 8989,
-   "OTH": 98
+   "DEM": 20660,
+   "REP": 6727,
+   "UNA": 10186,
+   "OTH": 114
   },
   "CURRITUCK": {
-   "UNA": 1087,
-   "REP": 961,
-   "DEM": 502,
-   "OTH": 5
+   "REP": 1154,
+   "UNA": 1283,
+   "DEM": 583,
+   "OTH": 6
   },
   "DARE": {
-   "REP": 1876,
-   "UNA": 2804,
-   "DEM": 1689,
-   "OTH": 11
+   "REP": 2250,
+   "UNA": 3257,
+   "DEM": 1912,
+   "OTH": 15
   },
   "DAVIDSON": {
-   "DEM": 4688,
-   "UNA": 5746,
-   "REP": 9085,
-   "OTH": 48
+   "REP": 10426,
+   "DEM": 5255,
+   "UNA": 6440,
+   "OTH": 55
   },
   "DAVIE": {
-   "UNA": 1999,
-   "DEM": 1182,
-   "REP": 2576,
-   "OTH": 12
+   "REP": 3077,
+   "UNA": 2283,
+   "DEM": 1277,
+   "OTH": 17
   },
   "DUPLIN": {
-   "DEM": 2030,
-   "UNA": 1466,
-   "REP": 1446,
-   "OTH": 9
+   "DEM": 2258,
+   "UNA": 1662,
+   "REP": 1653,
+   "OTH": 10
   },
   "DURHAM": {
-   "DEM": 41106,
-   "UNA": 22710,
-   "OTH": 122,
-   "REP": 4022
+   "DEM": 44807,
+   "UNA": 25091,
+   "OTH": 129,
+   "REP": 4568
   },
   "EDGECOMBE": {
-   "REP": 878,
-   "DEM": 5232,
-   "UNA": 950,
-   "OTH": 13
+   "REP": 1061,
+   "DEM": 5775,
+   "UNA": 1085,
+   "OTH": 14
   },
   "FORSYTH": {
-   "DEM": 27577,
-   "UNA": 19139,
-   "REP": 12490,
-   "OTH": 158
-  },
-  "FRANKLIN": {
-   "DEM": 5267,
-   "REP": 3227,
-   "UNA": 4053,
-   "OTH": 38
-  },
-  "GASTON": {
-   "DEM": 10006,
-   "UNA": 9275,
-   "REP": 10565,
-   "OTH": 74
-  },
-  "GATES": {
-   "REP": 197,
-   "UNA": 240,
-   "DEM": 580
-  },
-  "GRAHAM": {
-   "REP": 547,
-   "UNA": 339,
-   "DEM": 212,
-   "OTH": 3
-  },
-  "GRANVILLE": {
-   "UNA": 3011,
-   "REP": 2318,
-   "DEM": 4607,
-   "OTH": 18
-  },
-  "GREENE": {
-   "DEM": 1165,
-   "UNA": 603,
-   "REP": 396
-  },
-  "GUILFORD": {
-   "UNA": 24792,
-   "DEM": 40733,
-   "REP": 15615,
+   "DEM": 30277,
+   "UNA": 21306,
+   "REP": 14472,
    "OTH": 192
   },
+  "FRANKLIN": {
+   "DEM": 5775,
+   "REP": 3722,
+   "UNA": 4571,
+   "OTH": 41
+  },
+  "GASTON": {
+   "DEM": 10995,
+   "UNA": 10301,
+   "REP": 11953,
+   "OTH": 86
+  },
+  "GATES": {
+   "REP": 235,
+   "UNA": 284,
+   "DEM": 702
+  },
+  "GRAHAM": {
+   "REP": 611,
+   "UNA": 380,
+   "DEM": 232,
+   "OTH": 6
+  },
+  "GRANVILLE": {
+   "UNA": 3427,
+   "REP": 2659,
+   "DEM": 5069,
+   "OTH": 19
+  },
+  "GREENE": {
+   "DEM": 1273,
+   "UNA": 692,
+   "REP": 448,
+   "OTH": 1
+  },
+  "GUILFORD": {
+   "UNA": 27665,
+   "DEM": 44864,
+   "REP": 17820,
+   "OTH": 222
+  },
   "HALIFAX": {
-   "UNA": 1310,
-   "DEM": 4018,
-   "REP": 472,
-   "OTH": 5
+   "DEM": 4620,
+   "UNA": 1585,
+   "REP": 565,
+   "OTH": 6
   },
   "HARNETT": {
-   "UNA": 4777,
-   "REP": 4828,
-   "DEM": 5913,
-   "OTH": 62
+   "UNA": 5381,
+   "REP": 5534,
+   "DEM": 6555,
+   "OTH": 68
   },
   "HAYWOOD": {
-   "REP": 3019,
-   "UNA": 3992,
-   "DEM": 3579,
-   "OTH": 20
+   "REP": 3410,
+   "UNA": 4504,
+   "DEM": 3929,
+   "OTH": 27
   },
   "HENDERSON": {
-   "REP": 6864,
-   "UNA": 10005,
-   "DEM": 6009,
-   "OTH": 65
+   "REP": 7906,
+   "UNA": 11261,
+   "DEM": 6644,
+   "OTH": 79
   },
   "HERTFORD": {
-   "DEM": 1789,
-   "REP": 196,
-   "UNA": 377,
+   "DEM": 2089,
+   "REP": 244,
+   "UNA": 472,
    "OTH": 3
   },
   "HOKE": {
-   "DEM": 3511,
-   "REP": 872,
-   "UNA": 1852,
-   "OTH": 13
+   "DEM": 3855,
+   "REP": 1002,
+   "UNA": 2087,
+   "OTH": 16
   },
   "HYDE": {
-   "UNA": 190,
-   "DEM": 261,
-   "REP": 84,
+   "UNA": 203,
+   "DEM": 279,
+   "REP": 97,
    "OTH": 2
   },
   "IREDELL": {
-   "REP": 8906,
-   "UNA": 8826,
-   "DEM": 6634,
-   "OTH": 67
+   "DEM": 7395,
+   "REP": 10356,
+   "UNA": 9972,
+   "OTH": 83
   },
   "JACKSON": {
-   "UNA": 2541,
-   "DEM": 2247,
-   "REP": 1271,
-   "OTH": 23
+   "UNA": 2860,
+   "DEM": 2470,
+   "REP": 1458,
+   "OTH": 25
   },
   "JOHNSTON": {
-   "DEM": 10381,
-   "REP": 7855,
-   "UNA": 9347,
-   "OTH": 85
+   "DEM": 11596,
+   "UNA": 10725,
+   "REP": 9212,
+   "OTH": 103
   },
   "JONES": {
-   "REP": 279,
-   "DEM": 503,
-   "UNA": 317,
+   "REP": 333,
+   "DEM": 554,
+   "UNA": 383,
    "OTH": 3
   },
   "LEE": {
-   "UNA": 2412,
-   "REP": 2006,
-   "OTH": 24,
-   "DEM": 3045
+   "UNA": 2756,
+   "REP": 2341,
+   "OTH": 30,
+   "DEM": 3448
   },
   "LENOIR": {
-   "REP": 1644,
-   "UNA": 1645,
-   "DEM": 3971,
+   "REP": 1896,
+   "UNA": 1861,
+   "DEM": 4337,
    "OTH": 9
   },
   "LINCOLN": {
-   "REP": 5544,
-   "UNA": 4258,
-   "DEM": 3182,
-   "OTH": 23
+   "REP": 6444,
+   "UNA": 4871,
+   "DEM": 3520,
+   "OTH": 32
   },
   "MACON": {
-   "UNA": 2466,
-   "REP": 2314,
-   "DEM": 1384,
+   "UNA": 2742,
+   "REP": 2629,
+   "DEM": 1505,
    "OTH": 21
   },
   "MADISON": {
-   "UNA": 1525,
-   "DEM": 1279,
-   "REP": 823,
+   "UNA": 1726,
+   "DEM": 1455,
+   "REP": 933,
    "OTH": 11
   },
   "MARTIN": {
-   "DEM": 1721,
-   "REP": 369,
-   "UNA": 720,
+   "DEM": 1924,
+   "REP": 445,
+   "UNA": 870,
    "OTH": 5
   },
   "MCDOWELL": {
-   "REP": 2368,
-   "UNA": 2039,
-   "DEM": 1311,
-   "OTH": 7
+   "REP": 2699,
+   "UNA": 2310,
+   "DEM": 1447,
+   "OTH": 8
   },
   "MECKLENBURG": {
-   "REP": 21776,
-   "UNA": 56723,
-   "DEM": 80699,
-   "OTH": 441
+   "REP": 24937,
+   "UNA": 63109,
+   "DEM": 89244,
+   "OTH": 518
   },
   "MITCHELL": {
-   "REP": 1118,
-   "UNA": 810,
-   "DEM": 298,
+   "REP": 1287,
+   "UNA": 906,
+   "DEM": 325,
    "OTH": 5
   },
   "MONTGOMERY": {
-   "DEM": 974,
-   "UNA": 732,
-   "REP": 817,
+   "DEM": 1065,
+   "UNA": 828,
+   "REP": 933,
    "OTH": 1
   },
   "MOORE": {
-   "UNA": 5483,
-   "REP": 5512,
-   "DEM": 4040,
-   "OTH": 34
+   "UNA": 6201,
+   "REP": 6397,
+   "DEM": 4470,
+   "OTH": 42
   },
   "NASH": {
-   "UNA": 4394,
-   "DEM": 7800,
-   "REP": 4097,
-   "OTH": 20
+   "UNA": 4985,
+   "DEM": 8625,
+   "REP": 4674,
+   "OTH": 22
   },
   "NEW HANOVER": {
-   "DEM": 13812,
-   "REP": 10260,
-   "UNA": 14416,
-   "OTH": 135
+   "DEM": 15274,
+   "REP": 11692,
+   "UNA": 16136,
+   "OTH": 151
   },
   "NORTHAMPTON": {
-   "DEM": 1606,
-   "UNA": 509,
-   "REP": 185,
+   "DEM": 1794,
+   "UNA": 600,
+   "REP": 214,
    "OTH": 1
   },
   "ONSLOW": {
-   "REP": 6167,
-   "UNA": 6156,
-   "DEM": 4962,
-   "OTH": 65
+   "REP": 7127,
+   "UNA": 6906,
+   "DEM": 5458,
+   "OTH": 81
   },
   "ORANGE": {
-   "UNA": 12504,
-   "DEM": 18528,
-   "REP": 2042,
-   "OTH": 56
+   "UNA": 13596,
+   "DEM": 19953,
+   "REP": 2317,
+   "OTH": 65
   },
   "PAMLICO": {
-   "REP": 877,
-   "UNA": 699,
-   "DEM": 770,
+   "REP": 1018,
+   "UNA": 779,
+   "DEM": 838,
    "OTH": 1
   },
   "PASQUOTANK": {
-   "REP": 1135,
-   "DEM": 2333,
-   "UNA": 1562,
-   "OTH": 15
+   "REP": 1307,
+   "DEM": 2633,
+   "UNA": 1818,
+   "OTH": 19
   },
   "PENDER": {
-   "UNA": 2773,
-   "DEM": 2391,
-   "REP": 3141,
-   "OTH": 26
+   "UNA": 3206,
+   "DEM": 2720,
+   "REP": 3819,
+   "OTH": 31
   },
   "PERQUIMANS": {
-   "REP": 735,
-   "UNA": 697,
-   "DEM": 558,
+   "REP": 842,
+   "UNA": 804,
+   "DEM": 631,
    "OTH": 4
   },
   "PERSON": {
-   "UNA": 1996,
-   "DEM": 2425,
-   "REP": 1427,
+   "UNA": 2231,
+   "REP": 1622,
+   "DEM": 2672,
    "OTH": 14
   },
   "PITT": {
-   "REP": 4455,
-   "DEM": 11169,
-   "UNA": 6370,
-   "OTH": 44
+   "REP": 5174,
+   "DEM": 12470,
+   "UNA": 7301,
+   "OTH": 54
   },
   "POLK": {
-   "DEM": 1202,
-   "UNA": 1815,
-   "REP": 1320,
-   "OTH": 7
+   "DEM": 1277,
+   "UNA": 1968,
+   "REP": 1490,
+   "OTH": 8
   },
   "RANDOLPH": {
-   "UNA": 4500,
-   "REP": 8013,
-   "DEM": 3095,
-   "OTH": 31
+   "UNA": 5081,
+   "REP": 9322,
+   "DEM": 3437,
+   "OTH": 35
   },
   "RICHMOND": {
-   "UNA": 1304,
-   "DEM": 2088,
-   "REP": 1101,
-   "OTH": 7
+   "UNA": 1474,
+   "DEM": 2358,
+   "REP": 1268,
+   "OTH": 8
   },
   "ROBESON": {
-   "REP": 1520,
-   "UNA": 2534,
-   "DEM": 5079,
-   "OTH": 18
+   "REP": 1754,
+   "UNA": 2911,
+   "DEM": 5697,
+   "OTH": 19
   },
   "ROCKINGHAM": {
-   "REP": 4763,
-   "DEM": 4185,
-   "UNA": 3852,
-   "OTH": 21
+   "REP": 5356,
+   "DEM": 4626,
+   "UNA": 4305,
+   "OTH": 25
   },
   "ROWAN": {
-   "REP": 5755,
-   "UNA": 4534,
-   "DEM": 4289,
-   "OTH": 34
+   "REP": 6756,
+   "UNA": 5186,
+   "DEM": 4834,
+   "OTH": 39
   },
   "RUTHERFORD": {
-   "REP": 2788,
-   "UNA": 2316,
-   "DEM": 1681,
-   "OTH": 8
+   "REP": 3262,
+   "UNA": 2649,
+   "DEM": 1890,
+   "OTH": 9
   },
   "SAMPSON": {
-   "UNA": 958,
-   "REP": 1602,
-   "DEM": 2473,
-   "OTH": 8
+   "UNA": 1146,
+   "REP": 1942,
+   "DEM": 2816,
+   "OTH": 9
   },
   "SCOTLAND": {
-   "REP": 806,
-   "UNA": 1129,
-   "DEM": 2137,
-   "OTH": 3
+   "REP": 890,
+   "UNA": 1249,
+   "DEM": 2374,
+   "OTH": 4
   },
   "STANLY": {
-   "DEM": 1580,
-   "REP": 2971,
-   "UNA": 2142,
-   "OTH": 18
+   "DEM": 1804,
+   "REP": 3475,
+   "UNA": 2459,
+   "OTH": 20
   },
   "STOKES": {
-   "REP": 2635,
-   "UNA": 1518,
-   "DEM": 1089,
+   "DEM": 1159,
+   "REP": 2804,
+   "UNA": 1621,
    "OTH": 13
   },
   "SURRY": {
-   "DEM": 2027,
-   "REP": 3728,
-   "UNA": 2432,
-   "OTH": 9
+   "DEM": 2281,
+   "REP": 4348,
+   "UNA": 2773,
+   "OTH": 11
   },
   "SWAIN": {
-   "UNA": 691,
-   "DEM": 606,
-   "REP": 477,
-   "OTH": 4
+   "UNA": 754,
+   "DEM": 654,
+   "REP": 534,
+   "OTH": 6
   },
   "TRANSYLVANIA": {
-   "DEM": 2124,
-   "REP": 1637,
-   "UNA": 3046,
-   "OTH": 12
+   "DEM": 2293,
+   "REP": 1836,
+   "UNA": 3350,
+   "OTH": 16
   },
   "TYRRELL": {
-   "DEM": 163,
-   "UNA": 138,
-   "REP": 71
+   "REP": 84,
+   "DEM": 188,
+   "UNA": 168
   },
   "UNION": {
-   "UNA": 12561,
-   "DEM": 9905,
-   "REP": 11433,
-   "OTH": 80
+   "UNA": 14131,
+   "DEM": 11070,
+   "REP": 13191,
+   "OTH": 92
   },
   "VANCE": {
-   "UNA": 1178,
-   "REP": 836,
-   "DEM": 3699,
-   "OTH": 12
+   "UNA": 1333,
+   "REP": 975,
+   "DEM": 4142,
+   "OTH": 13
   },
   "WAKE": {
-   "UNA": 77865,
-   "DEM": 83693,
-   "REP": 27795,
-   "OTH": 569
+   "UNA": 86373,
+   "DEM": 91913,
+   "REP": 32069,
+   "OTH": 641
   },
   "WARREN": {
-   "DEM": 1866,
-   "UNA": 562,
-   "REP": 346,
+   "DEM": 2122,
+   "REP": 416,
+   "UNA": 649,
    "OTH": 3
   },
   "WASHINGTON": {
-   "DEM": 1121,
-   "REP": 219,
-   "UNA": 318
+   "DEM": 1264,
+   "REP": 256,
+   "UNA": 376
   },
   "WATAUGA": {
-   "DEM": 3024,
-   "UNA": 3622,
-   "REP": 1627,
-   "OTH": 24
+   "DEM": 3353,
+   "UNA": 4150,
+   "REP": 1958,
+   "OTH": 32
   },
   "WAYNE": {
-   "UNA": 3364,
-   "REP": 4837,
-   "DEM": 6862,
-   "OTH": 29
+   "UNA": 3751,
+   "REP": 5526,
+   "DEM": 7522,
+   "OTH": 34
   },
   "WILKES": {
-   "REP": 2873,
-   "UNA": 1574,
-   "DEM": 1195,
-   "OTH": 4
+   "REP": 3375,
+   "UNA": 1801,
+   "DEM": 1347,
+   "OTH": 6
   },
   "WILSON": {
-   "REP": 2025,
-   "DEM": 5811,
-   "UNA": 2592,
-   "OTH": 19
+   "DEM": 6445,
+   "REP": 2363,
+   "UNA": 2933,
+   "OTH": 24
   },
   "YADKIN": {
-   "UNA": 1043,
-   "REP": 1955,
-   "DEM": 555,
+   "UNA": 1154,
+   "REP": 2206,
+   "DEM": 615,
    "OTH": 5
   },
   "YANCEY": {
-   "REP": 993,
-   "UNA": 1232,
-   "DEM": 1072,
+   "REP": 1142,
+   "UNA": 1356,
+   "DEM": 1162,
    "OTH": 7
   }
  }
