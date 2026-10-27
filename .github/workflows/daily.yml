@@ -6,6 +6,9 @@ on:
     # around 5:25am ET. Cron is UTC, so after DST ends on Nov 1 this fires at
     # 5am EST; move it to '0 11 * * *' if that's too early.
     - cron: '0 10 * * *'
+    # Backup at 9am ET in case the file posts late or the first run fails.
+    # A run that finds no new file changes nothing.
+    - cron: '0 13 * * *'
   workflow_dispatch:
 
 permissions:
